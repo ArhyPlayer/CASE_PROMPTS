@@ -44,6 +44,7 @@ venv.bak/
 
 # Generated files
 generated_bot.py
+generated_post.txt
 *.log
 
 # Jupyter Notebook
