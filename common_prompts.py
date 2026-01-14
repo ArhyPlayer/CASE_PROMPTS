@@ -7,6 +7,7 @@ import os
 import json
 import sys
 import io
+import subprocess
 from pathlib import Path
 from typing import Dict, List, Optional
 from openai import OpenAI
@@ -313,6 +314,83 @@ def yes_no_question(question: str, default: str = "n") -> bool:
     return answer.lower() in ['y', 'yes', 'да', 'д']
 
 
+def show_code_structure_submenu() -> str:
+    """Показывает подменю для промпта 'Генерация структуры кода'"""
+    print("\n" + "="*80)
+    print("📋 ПОДМЕНЮ: Генерация структуры кода")
+    print("="*80)
+    print("\n1. Стандартные запросы")
+    print("2. Генерация Telegram бота (LangChain)")
+    print("0. Назад к выбору промпта")
+    print()
+    
+    while True:
+        choice = input("Выберите опцию (1-2, 0 для выхода): ").strip()
+        
+        if choice in ['1', '2', '0']:
+            return choice
+        else:
+            print("⚠️ Некорректный выбор, попробуйте снова")
+
+
+def generate_telegram_bot():
+    """Запускает генератор Telegram бота"""
+    print("\n" + "="*80)
+    print("🤖 ГЕНЕРАТОР TELEGRAM БОТОВ")
+    print("="*80)
+    print("\nС помощью LangChain будет создан готовый Telegram бот на основе вашего описания.")
+    print("Цепочка обработки: Анализ → Генерация кода → Проверка кода")
+    print()
+    
+    # Получаем описание бота
+    description = get_multiline_input("💬 Введите описание бота (что он должен уметь):")
+    
+    if not description:
+        print("❌ Описание не может быть пустым!")
+        return
+    
+    # Проверяем наличие script_bot.py
+    script_path = Path("script_bot.py")
+    if not script_path.exists():
+        print("❌ Файл script_bot.py не найден!")
+        return
+    
+    print("\n⏳ Запускаем генератор бота...")
+    print("-" * 80)
+    
+    try:
+        # Запускаем script_bot.py с описанием
+        result = subprocess.run(
+            [sys.executable, "script_bot.py", description],
+            capture_output=False,
+            text=True,
+            encoding='utf-8'
+        )
+        
+        if result.returncode == 0:
+            print("\n" + "="*80)
+            print("✅ Бот успешно сгенерирован!")
+            print("="*80)
+            
+            # Спрашиваем, показать ли содержимое
+            if yes_no_question("Показать сгенерированный код?", "n"):
+                bot_file = Path("generated_bot.py")
+                if bot_file.exists():
+                    print("\n" + "="*80)
+                    print("📄 СОДЕРЖИМОЕ: generated_bot.py")
+                    print("="*80)
+                    with open(bot_file, 'r', encoding='utf-8') as f:
+                        print(f.read())
+                    print("="*80)
+        else:
+            print(f"\n❌ Ошибка при генерации бота (код: {result.returncode})")
+            
+    except Exception as e:
+        print(f"\n❌ Ошибка при запуске генератора: {e}")
+    
+    input("\n\nНажмите Enter для продолжения...")
+
+
 def print_header():
     """Выводит заголовок программы"""
     print("\n" + "="*80)
@@ -390,6 +468,7 @@ def main():
     manager.list_prompts()
     
     # Выбор промпта
+    selected_prompt = None
     while True:
         choice = get_user_input("📋 Выберите промпт (1-3) или 'выход' для завершения", "")
         
@@ -403,6 +482,26 @@ def main():
             
             if selected_prompt:
                 print(f"\n✅ Выбран промпт: {selected_prompt.get('name')}")
+                
+                # Проверяем, является ли это промптом "Генерация структуры кода"
+                if selected_prompt.get('prompt_id') == 'code_structure':
+                    submenu_choice = show_code_structure_submenu()
+                    
+                    if submenu_choice == '0':
+                        # Возврат к выбору промпта
+                        continue
+                    elif submenu_choice == '2':
+                        # Генерация Telegram бота
+                        generate_telegram_bot()
+                        
+                        # Спрашиваем, хочет ли пользователь продолжить
+                        if yes_no_question("Вернуться к меню промптов?", "y"):
+                            continue
+                        else:
+                            print("\n👋 До свидания!")
+                            sys.exit(0)
+                    # submenu_choice == '1' - продолжаем стандартную обработку
+                
                 break
             else:
                 print("⚠️ Некорректный номер промпта, попробуйте снова")
