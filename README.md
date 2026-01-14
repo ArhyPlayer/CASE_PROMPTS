@@ -20,7 +20,7 @@ CASE_PROMPTS/
 │   ├── 02_code_structure.json
 │   └── 03_task_planning_prompt.json
 ├── venv/                       # Виртуальное окружение Python
-├── script.py                   # Основной исполняемый скрипт
+├── common_prompts.py           # Основной исполняемый скрипт
 ├── requirements.txt            # Зависимости проекта
 ├── .env-example               # Пример файла с переменными окружения
 ├── .env                       # Ваш файл с настройками (создается вручную)
@@ -75,7 +75,7 @@ OPENAI_MAX_TOKENS=2000
 ### Запуск скрипта
 
 ```bash
-python script.py
+python common_prompts.py
 ```
 
 ### Многострочный ввод текста
